@@ -10,9 +10,14 @@ namespace DodgeGame
     {
         public string State = "";
         public float Delta;
+
         public Player PlayerGame;
         public List<Bullet> BulletList;
         public BulletSpawner BulletSpawnerGame;
+        public Dictionary<string, bool> KeyPressed = new Dictionary<string, bool>
+        {
+            {"left", false}, {"right", false}, {"up", false}, {"down", false}
+        };
 
         public Game(int width, int height, string title) : base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title, Profile = ContextProfile.Compatability })
         {
@@ -61,6 +66,10 @@ namespace DodgeGame
             {
                 Bullet bullet = BulletList[i];
                 bullet.HandleTick(this);
+                if (bullet.Rect.Pos.X > 4.5f || bullet.Rect.Pos.X < -4.5f || bullet.Rect.Pos.Y > 3.5f || bullet.Rect.Pos.Y < -3.5f)
+                {
+                    BulletList.RemoveAt(i);
+                }
             }
         }
 
