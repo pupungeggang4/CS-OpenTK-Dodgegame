@@ -8,16 +8,12 @@ namespace DodgeGame
 {
     public class Game : GameWindow
     {
-        public string State = "";
+        public bool GameOver = false;
         public float Delta;
 
         public Player PlayerGame;
         public List<Bullet> BulletList;
         public BulletSpawner BulletSpawnerGame;
-        public Dictionary<string, bool> KeyPressed = new Dictionary<string, bool>
-        {
-            {"left", false}, {"right", false}, {"up", false}, {"down", false}
-        };
 
         public Game(int width, int height, string title) : base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title, Profile = ContextProfile.Compatability })
         {
@@ -54,21 +50,57 @@ namespace DodgeGame
             Delta = (float)e.Time;
             //Console.WriteLine(Delta);
             base.OnUpdateFrame(e);
-            HandleInput();
             Update();
             Render();
         }
 
         public void Update()
         {
-            BulletSpawnerGame.HandleSpawn(this);
-            for (int i = BulletList.Count - 1; i >= 0; i--)
+            if (!GameOver)
             {
-                Bullet bullet = BulletList[i];
-                bullet.HandleTick(this);
-                if (bullet.Rect.Pos.X > 4.5f || bullet.Rect.Pos.X < -4.5f || bullet.Rect.Pos.Y > 3.5f || bullet.Rect.Pos.Y < -3.5f)
+                BulletSpawnerGame.HandleSpawn(this);
+                for (int i = BulletList.Count - 1; i >= 0; i--)
                 {
-                    BulletList.RemoveAt(i);
+                    Bullet bullet = BulletList[i];
+                    bullet.HandleTick(this);
+                    if ((bullet.Rect.Pos - PlayerGame.Rect.Pos).Length < 0.4f)
+                    {
+                        GameOver = true;
+                    }
+                    if (bullet.Rect.Pos.X > 4.5f || bullet.Rect.Pos.X < -4.5f || bullet.Rect.Pos.Y > 3.5f || bullet.Rect.Pos.Y < -3.5f)
+                    {
+                        BulletList.RemoveAt(i);
+                    }
+                }
+
+                if (KeyboardState.IsKeyDown(Keys.Escape))
+                {
+                    Close();
+                }
+                if (KeyboardState.IsKeyDown(Keys.Left))
+                {
+                    PlayerGame.Rect.Pos.X -= PlayerGame.Speed * Delta;
+                }
+                if (KeyboardState.IsKeyDown(Keys.Right))
+                {
+                    PlayerGame.Rect.Pos.X += PlayerGame.Speed * Delta;
+                }
+                if (KeyboardState.IsKeyDown(Keys.Up))
+                {
+                    PlayerGame.Rect.Pos.Y += PlayerGame.Speed * Delta;
+                }
+                if (KeyboardState.IsKeyDown(Keys.Down))
+                {
+                    PlayerGame.Rect.Pos.Y -= PlayerGame.Speed * Delta;
+                }
+            }
+            else
+            {
+                if (KeyboardState.IsKeyDown(Keys.Enter))
+                {
+                    GameOver = false;
+                    BulletList.Clear();
+                    PlayerGame = new Player();
                 }
             }
         }
@@ -83,14 +115,6 @@ namespace DodgeGame
                 RenderHandler.RenderBullet(this, bullet);
             }
             SwapBuffers();
-        }
-
-        public void HandleInput()
-        {
-            if (KeyboardState.IsKeyDown(Keys.Escape))
-            {
-                Close();
-            }
         }
     }
 }
