@@ -15,7 +15,7 @@ namespace DodgeGame
         public List<Bullet> BulletList;
         public BulletSpawner BulletSpawnerGame;
 
-        public Game(int width, int height, string title) : base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title})
+        public Game(int width, int height, string title) : base(GameWindowSettings.Default, new NativeWindowSettings() { ClientSize = (width, height), Title = title})
         {
             //this.VSync = VSyncMode.On;
             this.UpdateFrequency = 60.0;
