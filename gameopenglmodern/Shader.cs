@@ -24,6 +24,20 @@ namespace DodgeGame
             GL.CompileShader(vertexShader);
             GL.CompileShader(fragmentShader);
 
+            int success;
+            GL.GetShader(vertexShader, ShaderParameter.CompileStatus, out success);
+            if (success == 0)
+            {
+                string infoLog = GL.GetShaderInfoLog(vertexShader);
+                Console.WriteLine(infoLog);
+            }
+            GL.GetShader(fragmentShader, ShaderParameter.CompileStatus, out success);
+            if (success == 0)
+            {
+                string infoLog = GL.GetShaderInfoLog(fragmentShader);
+                Console.WriteLine(infoLog);
+            }
+
             Handle = GL.CreateProgram();
             GL.AttachShader(Handle, vertexShader);
             GL.AttachShader(Handle, fragmentShader);
@@ -33,6 +47,11 @@ namespace DodgeGame
             GL.DetachShader(Handle, fragmentShader);
             GL.DeleteShader(fragmentShader);
             GL.DeleteShader(vertexShader);
+        }
+    
+        public void Dispose()
+        {
+            GL.DeleteProgram(Handle);
         }
     }
 }

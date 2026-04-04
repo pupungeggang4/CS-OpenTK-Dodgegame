@@ -12,6 +12,7 @@ namespace DodgeGame
         {
             Game game = new Game(800, 600, "Dodge Game");
             game.Run();
+            game.Clean();
         }
     }
 }

@@ -10,15 +10,18 @@ namespace DodgeGame
     {
         public bool GameOver = false;
         public float Delta;
+        public Shader ShaderGame;
+        public int VertexArrayObject, VertexBuffer, LUColor, LUMatrix, LAPosition;
+        public Matrix4 CameraMatrix;
 
         public Player PlayerGame;
         public List<Bullet> BulletList;
         public BulletSpawner BulletSpawnerGame;
 
-        public Game(int width, int height, string title) : base(GameWindowSettings.Default, new NativeWindowSettings() { ClientSize = (width, height), Title = title})
+        public Game(int width, int height, string title) : base(GameWindowSettings.Default, new NativeWindowSettings() { ClientSize = (width, height), Title = title, Profile = ContextProfile.Core })
         {
-            //this.VSync = VSyncMode.On;
-            this.UpdateFrequency = 60.0;
+            this.VSync = VSyncMode.On;
+            //this.UpdateFrequency = 60.0;
 
             var monitor = Monitors.GetPrimaryMonitor();
             int monitorWidth = monitor.HorizontalResolution;
@@ -28,18 +31,31 @@ namespace DodgeGame
                 int h = (int)(monitorHeight * 0.8);
                 int w = h * width / height;
                 ClientSize = new Vector2i(w, h);
-                GL.Viewport(0, 0, w, h);
             }
             else
             {
                 int w = (int)(monitorWidth * 0.8);
                 int h = w * height / width;
                 ClientSize = new Vector2i(w, h);
-                GL.Viewport(0, 0, w, h);
             }
             CenterWindow();
-            GL.Ortho(-4.0f, 4.0f, -3.0f, 3.0f, -1.0f, 1.0f);
 
+            ShaderGame = new Shader("vertex.vert", "fragment.frag");
+            VertexArrayObject = GL.GenVertexArray();
+            VertexBuffer = GL.GenBuffer();
+            GL.BindVertexArray(VertexArrayObject);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBuffer);
+            float[] vertices = {
+                -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f
+            };
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+            LUColor = GL.GetUniformLocation(ShaderGame.Handle, "uColor");
+            LUMatrix = GL.GetUniformLocation(ShaderGame.Handle, "uMatrix");
+            LAPosition = GL.GetAttribLocation(ShaderGame.Handle, "aPosition");
+
+            CameraMatrix = Matrix4.CreateOrthographicOffCenter(-4.0f, 4.0f, -3.0f, 3.0f, -1.0f, 1.0f);
+
+            GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
             PlayerGame = new Player();
             BulletList = new List<Bullet>();
             BulletSpawnerGame = new BulletSpawner(1.5f);
@@ -48,7 +64,6 @@ namespace DodgeGame
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             Delta = (float)e.Time;
-            //Console.WriteLine(Delta);
             base.OnUpdateFrame(e);
             Update();
             Render();
@@ -109,12 +124,21 @@ namespace DodgeGame
         {
             GL.ClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit);
+            GL.UseProgram(ShaderGame.Handle);
+            
+            GL.BindVertexArray(VertexArrayObject);
+
             RenderHandler.RenderPlayer(this, PlayerGame);
             foreach (Bullet bullet in BulletList)
             {
                 RenderHandler.RenderBullet(this, bullet);
             }
             SwapBuffers();
+        }
+        
+        public void Clean()
+        {
+            ShaderGame.Dispose();
         }
     }
 }

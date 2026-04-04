@@ -10,24 +10,28 @@ namespace DodgeGame
     {
         public static void RenderPlayer(Game game, Player player)
         {
-            GL.Begin(PrimitiveType.Quads);
-            GL.Color3(0.0f, 1.0f, 1.0f);
-            GL.Vertex2(player.Rect.Pos.X - player.Rect.Size.X * 0.5f, player.Rect.Pos.Y - player.Rect.Size.Y * 0.5f);
-            GL.Vertex2(player.Rect.Pos.X - player.Rect.Size.X * 0.5f, player.Rect.Pos.Y + player.Rect.Size.Y * 0.5f);
-            GL.Vertex2(player.Rect.Pos.X + player.Rect.Size.X * 0.5f, player.Rect.Pos.Y + player.Rect.Size.Y * 0.5f);
-            GL.Vertex2(player.Rect.Pos.X + player.Rect.Size.X * 0.5f, player.Rect.Pos.Y - player.Rect.Size.Y * 0.5f);
-            GL.End();
+            Matrix4 matrix = Matrix4.CreateScale(player.Rect.Size.X, player.Rect.Size.Y, 1.0f) *
+                             Matrix4.CreateTranslation(player.Rect.Pos.X, player.Rect.Pos.Y, 0.0f) *
+                             game.CameraMatrix;
+            GL.UniformMatrix4(game.LUMatrix, false, ref matrix);
+            GL.Uniform4(game.LUColor, 0.0f, 1.0f, 1.0f, 1.0f);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, game.VertexBuffer);
+            GL.VertexAttribPointer(game.LAPosition, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
+            GL.EnableVertexAttribArray(game.LAPosition);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
         }
 
         public static void RenderBullet(Game game, Bullet bullet)
         {
-            GL.Begin(PrimitiveType.Quads);
-            GL.Color3(1.0f, 1.0f, 1.0f);
-            GL.Vertex2(bullet.Rect.Pos.X - bullet.Rect.Size.X * 0.5f, bullet.Rect.Pos.Y - bullet.Rect.Size.Y * 0.5f);
-            GL.Vertex2(bullet.Rect.Pos.X - bullet.Rect.Size.X * 0.5f, bullet.Rect.Pos.Y + bullet.Rect.Size.Y * 0.5f);
-            GL.Vertex2(bullet.Rect.Pos.X + bullet.Rect.Size.X * 0.5f, bullet.Rect.Pos.Y + bullet.Rect.Size.Y * 0.5f);
-            GL.Vertex2(bullet.Rect.Pos.X + bullet.Rect.Size.X * 0.5f, bullet.Rect.Pos.Y - bullet.Rect.Size.Y * 0.5f);
-            GL.End();
+            Matrix4 matrix = Matrix4.CreateScale(bullet.Rect.Size.X, bullet.Rect.Size.Y, 1.0f) *
+                             Matrix4.CreateTranslation(bullet.Rect.Pos.X, bullet.Rect.Pos.Y, 0.0f) *
+                             game.CameraMatrix;
+            GL.UniformMatrix4(game.LUMatrix, false, ref matrix);
+            GL.Uniform4(game.LUColor, 1.0f, 1.0f, 1.0f, 1.0f);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, game.VertexBuffer);
+            GL.VertexAttribPointer(game.LAPosition, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
+            GL.EnableVertexAttribArray(game.LAPosition);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
         }
     }
 }
