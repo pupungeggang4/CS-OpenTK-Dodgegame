@@ -55,7 +55,6 @@ namespace DodgeGame
 
             CameraMatrix = Matrix4.CreateOrthographicOffCenter(-4.0f, 4.0f, -3.0f, 3.0f, -1.0f, 1.0f);
 
-            GL.Viewport(0, 0, ClientSize.X, ClientSize.Y);
             PlayerGame = new Player();
             BulletList = new List<Bullet>();
             BulletSpawnerGame = new BulletSpawner(1.5f);
