@@ -11,17 +11,20 @@ namespace DodgeGame
         public bool GameOver = false;
         public float Delta;
         public Shader ShaderGame;
-        public int VertexArrayObject, VertexBuffer, LUColor, LUMatrix, LAPosition;
+        public int Texture, BufferTexture;
+        public int VertexArrayObject, VertexBuffer, LUColor, LUMatrix, LUMode, LAPosition, LATexCoord;
         public Matrix4 CameraMatrix;
+        public FontObject Font;
 
         public Player PlayerGame;
         public List<Bullet> BulletList;
         public BulletSpawner BulletSpawnerGame;
+        public int Score;
+        public float ElapsedTime;
 
         public Game(int width, int height, string title) : base(GameWindowSettings.Default, new NativeWindowSettings() { ClientSize = (width, height), Title = title, Profile = ContextProfile.Core })
         {
             this.VSync = VSyncMode.On;
-            //this.UpdateFrequency = 60.0;
 
             var monitor = Monitors.GetPrimaryMonitor();
             int monitorWidth = monitor.HorizontalResolution;
@@ -43,6 +46,7 @@ namespace DodgeGame
             ShaderGame = new Shader("vertex.vert", "fragment.frag");
             VertexArrayObject = GL.GenVertexArray();
             VertexBuffer = GL.GenBuffer();
+            BufferTexture = GL.GenBuffer();
             GL.BindVertexArray(VertexArrayObject);
             GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBuffer);
             float[] vertices = {
@@ -51,10 +55,13 @@ namespace DodgeGame
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
             LUColor = GL.GetUniformLocation(ShaderGame.Handle, "uColor");
             LUMatrix = GL.GetUniformLocation(ShaderGame.Handle, "uMatrix");
+            LUMode = GL.GetUniformLocation(ShaderGame.Handle, "uMode");
             LAPosition = GL.GetAttribLocation(ShaderGame.Handle, "aPosition");
+            LATexCoord = GL.GetAttribLocation(ShaderGame.Handle, "aTexCoord");
+
+            Font = new FontObject();
 
             CameraMatrix = Matrix4.CreateOrthographicOffCenter(-4.0f, 4.0f, -3.0f, 3.0f, -1.0f, 1.0f);
-
             GL.Viewport(0, 0, FramebufferSize.X, FramebufferSize.Y);
             PlayerGame = new Player();
             BulletList = new List<Bullet>();
@@ -71,8 +78,16 @@ namespace DodgeGame
 
         public void Update()
         {
+            if (KeyboardState.IsKeyDown(Keys.Escape))
+            {
+                Close();
+            }
+
             if (!GameOver)
             {
+                ElapsedTime += Delta;
+                Score = (int)ElapsedTime;
+
                 BulletSpawnerGame.HandleSpawn(this);
                 for (int i = BulletList.Count - 1; i >= 0; i--)
                 {
@@ -86,11 +101,6 @@ namespace DodgeGame
                     {
                         BulletList.RemoveAt(i);
                     }
-                }
-
-                if (KeyboardState.IsKeyDown(Keys.Escape))
-                {
-                    Close();
                 }
                 if (KeyboardState.IsKeyDown(Keys.Left))
                 {
@@ -124,15 +134,22 @@ namespace DodgeGame
         {
             GL.ClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit);
+            GL.Enable(EnableCap.Blend);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
             GL.UseProgram(ShaderGame.Handle);
-            
+            GL.Uniform1(LUMode, 0);
             GL.BindVertexArray(VertexArrayObject);
 
+            GL.Disable(EnableCap.Texture2D);
             RenderHandler.RenderPlayer(this, PlayerGame);
             foreach (Bullet bullet in BulletList)
             {
                 RenderHandler.RenderBullet(this, bullet);
             }
+
+            GL.Enable(EnableCap.Texture2D);
+            GL.Uniform1(LUMode, 1);
+            RenderHandler.RenderUpperUI(this);
             SwapBuffers();
         }
         
